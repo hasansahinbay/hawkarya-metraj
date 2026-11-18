@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hawkarya Metraj Aracı</title>
+<style>
+:root{--navy:#0c2448;--cyan:#12b5d6;--bg:#f3f6fa;--card:#fff;--line:#dde4ee;--text:#14233b;--muted:#5f6f87;--warn:#b45309;--warnbg:#fef3c7;--err:#b91c1c;--errbg:#fee2e2;--ok:#047857}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-text-size-adjust:100%}
+header{background:var(--navy);color:#fff;padding:18px 16px 16px}
+header .in{max-width:880px;margin:0 auto}
+header h1{margin:0;font-size:20px;font-weight:700;letter-spacing:.2px}
+header h1 span{color:var(--cyan)}
+header p{margin:4px 0 0;font-size:13px;color:#b9c7e0}
+main{max-width:880px;margin:0 auto;padding:14px 14px 40px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.card h2{margin:0 0 10px;font-size:15px}
+label{display:block;font-size:13px;font-weight:600;margin:10px 0 4px}
+label small{font-weight:400;color:var(--muted)}
+input[type=text],input[type=number],select{width:100%;font:inherit;font-size:16px;padding:10px 11px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--text)}
+input:focus,select:focus{outline:2px solid var(--cyan);outline-offset:0;border-color:var(--cyan)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:520px){.row{grid-template-columns:1fr}}
+.drop{border:2px dashed #b7c4d8;border-radius:12px;padding:20px 12px;text-align:center;background:#fafcff;cursor:pointer}
+.drop.over{border-color:var(--cyan);background:#ecfbff}
+.drop b{display:block;font-size:15px}
+.drop span{font-size:12.5px;color:var(--muted)}
+.fname{margin-top:8px;font-size:13px;color:var(--muted);word-break:break-all}
+button{font:inherit;font-size:15px;font-weight:600;border:0;border-radius:10px;padding:12px 16px;cursor:pointer}
+.primary{background:var(--navy);color:#fff;width:100%;margin-top:12px}
+.primary:disabled{opacity:.45;cursor:not-allowed}
+.ghost{background:#eaf0f8;color:var(--navy);padding:9px 12px;font-size:13.5px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{background:#eaf0f8;border:1px solid var(--line);color:var(--navy);border-radius:999px;padding:5px 10px;font-size:12.5px;cursor:pointer}
+.chip.on{background:var(--cyan);border-color:var(--cyan);color:#04202a}
+.chip i{font-style:normal;color:var(--muted);margin-left:4px}
+.chk{display:flex;gap:8px;align-items:center;margin-top:12px;font-size:14px}
+.chk input{width:18px;height:18px}
+.bar{height:6px;background:#e3eaf4;border-radius:4px;overflow:hidden;margin-top:10px;display:none}
+.bar div{height:100%;width:0;background:var(--cyan);transition:width .1s}
+.msg{border-radius:10px;padding:10px 12px;font-size:13.5px;margin-top:10px;line-height:1.45}
+.msg.warn{background:var(--warnbg);color:var(--warn)}
+.msg.err{background:var(--errbg);color:var(--err)}
+.msg.info{background:#e8f7fb;color:#0b5f73}
+.big{display:flex;gap:10px;flex-wrap:wrap}
+.big .k{flex:1 1 140px;background:var(--navy);color:#fff;border-radius:12px;padding:12px}
+.big .k small{display:block;color:#a9bbd9;font-size:12px}
+.big .k b{font-size:22px}
+.big .k b em{font-style:normal;font-size:13px;color:#a9bbd9;font-weight:500}
+table{width:100%;border-collapse:collapse;font-size:14px;margin-top:10px}
+th,td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+td.n,th.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+tr.sum td{font-weight:700;border-top:2px solid var(--navy);border-bottom:0}
+tr.far td:first-child::after{content:" ⚠";color:var(--warn)}
+tr.nolabel td:first-child{color:var(--err)}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+canvas{width:100%;height:320px;border:1px solid var(--line);border-radius:12px;background:#fff;touch-action:none;display:block}
+.zoom{display:flex;gap:6px;margin-top:8px}
+textarea.cp{width:100%;height:120px;font:12px monospace;margin-top:8px;display:none}
+.hide{display:none}
+.foot{font-size:12px;color:var(--muted);text-align:center;margin-top:14px}
+</style>
+</head>
+<body>
+<header><div class="in">
+<h1>Hawkarya <span>Metraj Aracı</span></h1>
+<p>DXF yükleyin, seçtiğiniz layer'ların uzunluklarını mahal mahal toplayın. Dosya cihazınızdan çıkmaz, hiçbir yere yüklenmez veya saklanmaz.</p>
+</div></header>
+<main>
+<div class="card">
+<h2>1. DXF dosyası</h2>
+<div class="drop" id="drop" tabindex="0">
+<b>DXF dosyasını seçin veya buraya bırakın</b>
+<span>ASCII DXF (.dxf). Mac, Windows ve iPhone'da çalışır.</span>
+</div>
+<input type="file" id="file" accept=".dxf,.DXF" class="hide">
+<div class="fname" id="fname"></div>
+<div class="bar" id="bar"><div></div></div>
+<div id="fileMsg"></div>
+<div id="layerBox" class="hide">
+<label>Dosyadaki layer'lar <small>(dokunarak hesaplanacaklara ekleyin)</small></label>
+<div class="chips" id="chips"></div>
+</div>
+</div>
+<div class="card">
+<h2>2. Ayarlar</h2>
+<label for="layers">Hesaplanacak layer'lar <small>(virgülle ayırın; "tezgah metraj, kaplama metraj" gibi)</small></label>
+<input type="text" id="layers" value="tezgah metraj" autocapitalize="off" autocomplete="off" spellcheck="false">
+<label for="tlayers">Mahal yazısı layer'ları <small>(boş bırakırsanız dosyadaki tüm yazılar kullanılır)</small></label>
+<input type="text" id="tlayers" value="tezgah mahal" autocapitalize="off" autocomplete="off" spellcheck="false">
+<div class="row">
+<div>
+<label for="unit">Çizim birimi</label>
+<select id="unit">
+<option value="auto">Otomatik (dosyadan, yoksa cm)</option>
+<option value="cm">cm</option>
+<option value="mm">mm</option>
+<option value="m">m</option>
+</select>
+</div>
+<div>
+<label for="maxd">Yazı–çizgi uyarı mesafesi <small>(çizim birimi)</small></label>
+<input type="number" id="maxd" value="200" min="0" inputmode="decimal">
+</div>
+</div>
+<label class="chk"><input type="checkbox" id="bykat"> Kata göre ayrıca özet ver ("Kat 4", "4. kat", "K4" yazanlar)</label>
+<button class="primary" id="go" disabled>Metrajı hesapla</button>
+<div id="runMsg"></div>
+</div>
+<div id="res" class="hide">
+<div class="card">
+<h2>3. Sonuç</h2>
+<div class="big" id="big"></div>
+<div id="warns"></div>
+<div style="overflow-x:auto"><table id="tbl"></table></div>
+<div id="katWrap" class="hide">
+<h2 style="margin-top:16px">Kata göre özet</h2>
+<div style="overflow-x:auto"><table id="ktbl"></table></div>
+</div>
+<div id="lwrap" class="hide">
+<h2 style="margin-top:16px">Layer bazında toplam</h2>
+<div style="overflow-x:auto"><table id="ltbl"></table></div>
+</div>
+<div class="tools">
+<button class="ghost" id="copy">Sonucu kopyala (Excel'e yapıştırılır)</button>
+</div>
+<textarea class="cp" id="cp" readonly></textarea>
+</div>
+<div class="card">
+<h2>Önizleme</h2>
+<canvas id="cv"></canvas>
+<div class="zoom">
+<button class="ghost" id="zi">＋</button><button class="ghost" id="zo">－</button><button class="ghost" id="zf">Sığdır</button>
+</div>
+<p style="font-size:12.5px;color:var(--muted);margin:8px 0 0">Renkli çizgiler hesaba giren çizgilerdir, aynı renk = aynı mahal. Kırmızı çizgi yazısız demektir. Sürükleyerek kaydırın.</p>
+</div>
+</div>
+<div class="foot">Dosya yalnızca bu sayfada, cihazınızın hafızasında okunur. Çıkışta hiçbir şey kalmaz.</div>
+</main>
+<script src="core.js"></script>
+</body>
+</html>
