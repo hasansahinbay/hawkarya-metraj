@@ -254,6 +254,7 @@ function katOf(l){
   return m?String(parseInt(m[1],10)):null;
 }
 var UNIT_CM={cm:1,mm:0.1,m:100};
+var lastUnit='cm';
 function unitFromIns(n){return n===4?'mm':n===5?'cm':n===6?'m':null;}
 
 var $=function(id){return document.getElementById(id);};
@@ -350,7 +351,7 @@ $('go').addEventListener('click',function(){
     if(u==='auto'){u=unitFromIns(P.insunits)||'cm';}
     var factor=UNIT_CM[u];
     var res=buildResult(P,{maxDist:parseFloat($('maxd').value)});
-    lastRes=res;lastP=P;lastFactor=factor;
+    lastRes=res;lastP=P;lastFactor=factor;lastUnit=u;
     renderResult(res,P,u);
   }).catch(function(e){
     setBar(-1);showMsg('runMsg','err',e&&e.message==='BIN'?'İkili DXF desteklenmiyor, ASCII DXF kaydedin.':'Hesaplama hatası: '+esc(e&&e.message||e));
@@ -365,7 +366,7 @@ function renderResult(res,P,unit){
     $('warns').innerHTML='<div class="msg warn">Yazdığınız layer adlarına uyan çizgi bulunamadı. Yukarıdaki layer listesinden dokunarak seçebilirsiniz.</div>';
     drawPreview(res,P);return;
   }
-  $('big').innerHTML='<div class="k"><small>Toplam uzunluk</small><b>'+fmt(cm(res.total))+' <em>cm</em></b></div>'+
+  $('big').innerHTML='<div class="k"><small>Toplam uzunluk</small><b>'+fmt(res.total)+' <em>'+lastUnit+'</em></b></div>'+
     '<div class="k"><small>Toplam (metre)</small><b>'+fmt(cm(res.total)/100,3)+' <em>m</em></b></div>'+
     '<div class="k"><small>Çizgi / mahal</small><b>'+fmt(res.count,0)+' <em>/ '+res.groups.filter(function(g){return g.key;}).length+'</em></b></div>';
   var w=[];
@@ -376,17 +377,17 @@ function renderResult(res,P,unit){
   if(P.unsup)w.push('<b>'+P.unsup+'</b> 3B/ağ polyline desteklenmiyor, atlandı.');
   w.push('Birim: <b>'+unit+'</b>'+($('unit').value==='auto'&&!unitFromIns(P.insunits)?' (dosyada birim yok, cm varsayıldı)':'')+'.');
   $('warns').innerHTML=w.map(function(x,i){return '<div class="msg '+(i===w.length-1?'info':'warn')+'">'+x+'</div>';}).join('');
-  var h='<tr><th>Mahal</th><th class="n">Çizgi</th><th class="n">cm</th><th class="n">m</th></tr>';
+  var h='<tr><th>Mahal</th><th class="n">Çizgi</th><th class="n">'+lastUnit+'</th><th class="n">m</th></tr>';
   res.groups.forEach(function(g){
-    h+=row(['<td>'+esc(g.label)+'</td>','<td class="n">'+g.count+'</td>','<td class="n">'+fmt(cm(g.total))+'</td>','<td class="n">'+fmt(cm(g.total)/100,3)+'</td>'],(g.far?'far ':'')+(g.key?'':'nolabel'));
+    h+=row(['<td>'+esc(g.label)+'</td>','<td class="n">'+g.count+'</td>','<td class="n">'+fmt(g.total)+'</td>','<td class="n">'+fmt(cm(g.total)/100,3)+'</td>'],(g.far?'far ':'')+(g.key?'':'nolabel'));
   });
-  h+=row(['<td>Genel toplam</td>','<td class="n">'+res.count+'</td>','<td class="n">'+fmt(cm(res.total))+'</td>','<td class="n">'+fmt(cm(res.total)/100,3)+'</td>'],'sum');
+  h+=row(['<td>Genel toplam</td>','<td class="n">'+res.count+'</td>','<td class="n">'+fmt(res.total)+'</td>','<td class="n">'+fmt(cm(res.total)/100,3)+'</td>'],'sum');
   $('tbl').innerHTML=h;
   $('katWrap').classList.add('hide');
   var lk=Object.keys(res.layerTotals);
   if(lk.length>1){
-    var lh='<tr><th>Layer</th><th class="n">Çizgi</th><th class="n">cm</th><th class="n">m</th></tr>';
-    lk.sort().forEach(function(k){var o=res.layerTotals[k];lh+=row(['<td>'+esc(k)+'</td>','<td class="n">'+o.count+'</td>','<td class="n">'+fmt(cm(o.total))+'</td>','<td class="n">'+fmt(cm(o.total)/100,3)+'</td>']);});
+    var lh='<tr><th>Layer</th><th class="n">Çizgi</th><th class="n">'+lastUnit+'</th><th class="n">m</th></tr>';
+    lk.sort().forEach(function(k){var o=res.layerTotals[k];lh+=row(['<td>'+esc(k)+'</td>','<td class="n">'+o.count+'</td>','<td class="n">'+fmt(o.total)+'</td>','<td class="n">'+fmt(cm(o.total)/100,3)+'</td>']);});
     $('ltbl').innerHTML=lh;$('lwrap').classList.remove('hide');
   }else $('lwrap').classList.add('hide');
   drawPreview(res,P);
@@ -459,8 +460,8 @@ function katGroups(){
 function renderKat(){
   var K=katGroups(),f=lastFactor;
   if(!K){$('katWrap').classList.add('hide');return;}
-  var h='<tr><th>Kat</th><th class="n">Çizgi</th><th class="n">cm</th><th class="n">m</th></tr>';
-  K.order.forEach(function(k){var x=K.o[k];h+=row(['<td>'+esc(k)+'</td>','<td class="n">'+x.count+'</td>','<td class="n">'+fmt(x.total*f)+'</td>','<td class="n">'+fmt(x.total*f/100,3)+'</td>']);});
+  var h='<tr><th>Kat</th><th class="n">Çizgi</th><th class="n">'+lastUnit+'</th><th class="n">m</th></tr>';
+  K.order.forEach(function(k){var x=K.o[k];h+=row(['<td>'+esc(k)+'</td>','<td class="n">'+x.count+'</td>','<td class="n">'+fmt(x.total)+'</td>','<td class="n">'+fmt(x.total*f/100,3)+'</td>']);});
   $('ktbl').innerHTML=h;$('katWrap').classList.remove('hide');
 }
 $('bykat').addEventListener('change',renderKat);
@@ -470,11 +471,11 @@ renderResult=function(res,P,unit){_rr(res,P,unit);renderKat();};
 function num(v,d){return v.toFixed(d).replace('.',',');}
 function buildCopyText(){
   if(!lastRes||!lastRes.count)return '';
-  var f=lastFactor,L=['Mahal\tÇizgi\tcm\tm'];
-  lastRes.groups.forEach(function(g){L.push([g.label,g.count,num(g.total*f,2),num(g.total*f/100,3)].join('\t'));});
-  L.push(['Genel toplam',lastRes.count,num(lastRes.total*f,2),num(lastRes.total*f/100,3)].join('\t'));
+  var f=lastFactor,L=['Mahal\tÇizgi\t'+lastUnit+'\tm'];
+  lastRes.groups.forEach(function(g){L.push([g.label,g.count,num(g.total,2),num(g.total*f/100,3)].join('\t'));});
+  L.push(['Genel toplam',lastRes.count,num(lastRes.total,2),num(lastRes.total*f/100,3)].join('\t'));
   var K=katGroups();
-  if(K){L.push('');L.push('Kat\tÇizgi\tcm\tm');K.order.forEach(function(k){var x=K.o[k];L.push([k,x.count,num(x.total*f,2),num(x.total*f/100,3)].join('\t'));});}
+  if(K){L.push('');L.push('Kat\tÇizgi\t'+lastUnit+'\tm');K.order.forEach(function(k){var x=K.o[k];L.push([k,x.count,num(x.total,2),num(x.total*f/100,3)].join('\t'));});}
   return L.join('\n');
 }
 function fallbackCopy(txt){
